@@ -22,12 +22,12 @@ num_classes = 2
 num_epochs = 10
 img_rows, img_cols = 128, 128
 # load data
-x_train = np.load("D:\\hiwi_work\\binary_split\\X_train.npy")
-y_train = np.load("D:\\hiwi_work\\binary_split\\y_train.npy")
-x_val = np.load("D:\\hiwi_work\\binary_split\\x_val.npy")
-y_val = np.load("D:\\hiwi_work\\binary_split\\y_val.npy")
-x_test = np.load("D:\\hiwi_work\\binary_split\\X_test.npy")
-y_test = np.load("D:\\hiwi_work\\binary_split\\y_test.npy")
+x_train = np.load("Path_to_x_train.npy")
+y_train = np.load("Path_to_y_train.npy")
+x_val = np.load("Path_to_x_val.npy")
+y_val = np.load("Path_to_y_val.npy")
+x_test = np.load("Path_to_x_test.npy")
+y_test = np.load("Path_to_y_test.npy")
 
 #some pre-processing to feed data to keras model
 if K.image_data_format() == 'channels_first':
@@ -49,8 +49,10 @@ x_train /= 255
 x_val /= 255
 x_test /= 255
 
+#compute_class_weights and provide to model.fit() latter
 class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
 
+#build simple model with some cnn layers 
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
                  activation='relu',
@@ -62,12 +64,12 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.3))
-model.add(Dense(num_classes, activation='softmax'))
+model.add(Dense(num_classes, activation='sigmoid'))
 
-tensorboard = TensorBoard(log_dir="D:\\hiwi_work\\tb_logs\\binary_diff_weights_list")
+tensorboard = TensorBoard(log_dir="path_to_store_tensorboard_logs")
 
 model.compile(optimizer=Adam(lr=0.0001),
-              loss='sparse_categorical_crossentropy',
+              loss='binary_crossentropy',
               metrics=['accuracy', f1])
 
 model.fit(x_train, y_train,
@@ -78,4 +80,4 @@ model.fit(x_train, y_train,
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-model.save("D:\\hiwi_work\\Models\\binary_diff_weights_list.h5")
+model.save("path_to_save_model.h5")
