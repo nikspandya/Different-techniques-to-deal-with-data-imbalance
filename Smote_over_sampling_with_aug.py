@@ -61,7 +61,7 @@ x_sm_train /= 255
 x_val /= 255
 x_test /= 255
 
-# convert class vectors to binary class matrices
+# Onehot encoding
 y_train_encoded = keras.utils.to_categorical(y_sm_t, num_classes)
 y_val_encoded = keras.utils.to_categorical(y_val, num_classes)
 y_test_encoded = keras.utils.to_categorical(y_test, num_classes)
