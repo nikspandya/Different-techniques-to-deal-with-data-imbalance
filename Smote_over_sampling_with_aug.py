@@ -22,29 +22,26 @@ num_classes = 2
 num_epochs = 10
 img_rows, img_cols = 128, 128
 # load data
-x_train = np.load("D:\\hiwi_work\\binary_split\\X_train.npy")
-y_train = np.load("D:\\hiwi_work\\binary_split\\y_train.npy")
-x_val = np.load("D:\\hiwi_work\\binary_split\\x_val.npy")
-y_val = np.load("D:\\hiwi_work\\binary_split\\y_val.npy")
-x_test = np.load("D:\\hiwi_work\\binary_split\\X_test.npy")
-y_test = np.load("D:\\hiwi_work\\binary_split\\y_test.npy")
+x_train = np.load("path_to_X_train.npy")
+y_train = np.load("path_to_y_train.npy")
+x_val = np.load("path_to_x_val.npy")
+y_val = np.load("path_to_y_val.npy")
+x_test = np.load("path_to_X_test.npy")
+y_test = np.load("path_to_y_test.npy")
 
-#make (samples, features) format
-x_train_2d = np.reshape(x_train, (x_train.shape[0], -1))
-x_val_2d = np.reshape(x_val, (x_val.shape[0], -1))
-x_test_2d = np.reshape(x_test, (x_test.shape[0], -1))
+def create_balanced_sample_smote(x, y):
+    """x: input image
+       y: labels
+       return: class ballanced images numpy array with labels
+    """
+    x_2d = np.reshape(x, (x.shape[0], -1))
+    smote = SMOTE('balanced')
+    x_sm, y_sm = smote.fit_sample(x_2d, y)
+    x_sm_resized = x_sm.reshape(x_sm.shape[0], 128, 128, 3)
+    return x_sm_resized, y_sm
+x_sm_train, y_sm_t = create_balanced_sample_smote(x_train, y_train)
 
-smote = SMOTE('minority')
-x_sm_t, y_sm_t = smote.fit_sample(x_train_2d, y_train)
-x_sm_v, y_sm_val = smote.fit_sample(x_val_2d, y_val)
-x_sm_test, y_sm_test = smote.fit_sample(x_test_2d, y_test)
-# reshape again for cnn
-x_sm_train = x_sm_t.reshape(3782,128,128,3)
-x_sm_val = x_sm_v.reshape(458,128,128,3)
-x_sm_test = x_sm_test.reshape(428,128,128,3)
-
-#some pre-processing to feed data to keras model
-#some pre-processing to feed data to keras model
+#some pre-processing 
 if K.image_data_format() == 'channels_first':
     x_train_bal = x_train.reshape(x_sm_train.shape[0], 3, img_rows, img_cols)
     x_val_bal = x_val.reshape(x_sm_val.shape[0], 3, img_rows, img_cols)
@@ -57,17 +54,17 @@ else:
     input_shape = (img_rows, img_cols, 3)
 
 x_sm_train = x_sm_train.astype('float32')
-x_sm_val = x_sm_val.astype('float32')
-x_sm_test = x_sm_test.astype('float32')
+x_val = x_val.astype('float32')
+x_test = x_test.astype('float32')
 # normalize data
 x_sm_train /= 255
-x_sm_val /= 255
-x_sm_test /= 255
+x_val /= 255
+x_test /= 255
 
 # convert class vectors to binary class matrices
 y_train_encoded = keras.utils.to_categorical(y_sm_t, num_classes)
-y_val_encosed = keras.utils.to_categorical(y_sm_val, num_classes)
-y_test_encoded = keras.utils.to_categorical(y_sm_test, num_classes)
+y_val_encoded = keras.utils.to_categorical(y_val, num_classes)
+y_test_encoded = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
@@ -80,20 +77,19 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.3))
-model.add(Dense(num_classes, activation='tanh'))
+model.add(Dense(num_classes, activation='sigmoid'))
 
-tensorboard = TensorBoard(log_dir="D:\\hiwi_work\\tb_logs\\model_original_binary_smote_aug")
+tensorboard = TensorBoard(log_dir="path_to_save_tensorboard_logs")
 
 datagen = ImageDataGenerator(
     featurewise_center=True,
     featurewise_std_normalization=True,
-    rotation_range=20,
     width_shift_range=0.2,
     height_shift_range=0.2,
     horizontal_flip=True)
 datagen.fit(x_sm_train)
 
-model.compile(optimizer=Adam(lr=0.0001),
+model.compile(optimizer=Adam(lr=0.00001),
               loss='binary_crossentropy',
               metrics=['accuracy', f1])
 
@@ -102,8 +98,8 @@ model.fit_generator(datagen.flow(x_sm_train, y_train_encoded,
           epochs=num_epochs,
           steps_per_epoch=len(x_train) / batch_size,
           verbose=1,
-          validation_data=(x_sm_val, y_val_encosed), callbacks=[tensorboard])
-score = model.evaluate(x_sm_test, y_test_encoded, verbose=0)
+          validation_data=(x_val, y_val_encoded), callbacks=[tensorboard])
+score = model.evaluate(x_test, y_test_encoded, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-model.save("D:\\hiwi_work\\Models\\model_original_smote_aug.h5")
+model.save("path_to_save_model.h5")
