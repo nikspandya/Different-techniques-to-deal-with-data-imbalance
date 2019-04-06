@@ -43,16 +43,9 @@ x_sm_train, y_sm_t = create_balanced_sample_smote(x_train, y_train)
 
 #some pre-processing 
 if K.image_data_format() == 'channels_first':
-    x_train_bal = x_train.reshape(x_sm_train.shape[0], 3, img_rows, img_cols)
-    x_val_bal = x_val.reshape(x_sm_val.shape[0], 3, img_rows, img_cols)
-    x_test_bal = x_test.reshape(x_sm_test.shape[0], 3, img_rows, img_cols)
     input_shape = (3, img_rows, img_cols)
 else:
-    x_train_bal = x_sm_train.reshape(x_sm_train.shape[0], img_rows, img_cols, 3)
-    x_val_bal = x_sm_val.reshape(x_sm_val.shape[0], img_rows, img_cols, 3)
-    x_test_bal = x_sm_test.reshape(x_sm_test.shape[0], img_rows, img_cols, 3)
     input_shape = (img_rows, img_cols, 3)
-
 x_sm_train = x_sm_train.astype('float32')
 x_val = x_val.astype('float32')
 x_test = x_test.astype('float32')
