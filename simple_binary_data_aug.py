@@ -21,12 +21,12 @@ num_classes = 2
 num_epochs = 10
 img_rows, img_cols = 128, 128
 # load data
-x_train = np.load("D:\\hiwi_work\\binary_split\\X_train.npy")
-y_train = np.load("D:\\hiwi_work\\binary_split\\y_train.npy")
-x_val = np.load("D:\\hiwi_work\\binary_split\\x_val.npy")
-y_val = np.load("D:\\hiwi_work\\binary_split\\y_val.npy")
-x_test = np.load("D:\\hiwi_work\\binary_split\\X_test.npy")
-y_test = np.load("D:\\hiwi_work\\binary_split\\y_test.npy")
+x_train = np.load("path_to_X_train.npy")
+y_train = np.load("path_to_y_train.npy")
+x_val = np.load("path_to_x_val.npy")
+y_val = np.load("path_to_y_val.npy")
+x_test = np.load("path_to_X_test.npy")
+y_test = np.load("path_to_y_test.npy")
 
 #some pre-processing to feed data to keras model
 if K.image_data_format() == 'channels_first':
@@ -48,7 +48,7 @@ x_train /= 255
 x_val /= 255
 x_test /= 255
 
-# convert class vectors to binary class matrices
+# onehot encoding
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_val = keras.utils.to_categorical(y_val, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
@@ -64,21 +64,17 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Flatten())
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.3))
-model.add(Dense(num_classes, activation='tanh'))
+model.add(Dense(num_classes, activation='sigmoid'))
 
 datagen = ImageDataGenerator(
     featurewise_center=True,
     featurewise_std_normalization=True,
-    #rotation_range=20,
     width_shift_range=0.1,
     height_shift_range=0.2,
     horizontal_flip=True)
-
-# compute quantities required for featurewise normalization
-# (std, mean, and principal components if ZCA whitening is applied)
 datagen.fit(x_train)
 
-tensorboard = TensorBoard(log_dir="D:\\hiwi_work\\tb_logs\\model_original_binary_aug")
+tensorboard = TensorBoard(log_dir="path_to_save_tensorboard_logs")
 
 model.compile(optimizer=Adam(lr=0.0001),
               loss='binary_crossentropy',
@@ -93,4 +89,4 @@ model.fit_generator(datagen.flow(x_train, y_train,
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-model.save("D:\\hiwi_work\\Models\\model_original_aug.h5")
+model.save("model_path.h5")
