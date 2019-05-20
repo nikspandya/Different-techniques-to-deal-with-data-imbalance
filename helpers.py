@@ -56,7 +56,9 @@ def f1(y_true, y_pred):
     return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 def balanced_sample_maker(X, y, sample_size, random_seed=None):
-    """ return a balanced data set by sampling all classes with sample_size
+    """
+    credits: @Kevin Mader https://stackoverflow.com/questions/23455728/scikit-learn-balanced-subsampling
+    return a balanced data set by sampling all classes with sample_size
         current version is developed on assumption that the positive
         class is the minority.
     Parameters:
